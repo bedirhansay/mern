@@ -1,6 +1,14 @@
 const AuthSchema = require("../models/auth");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const crypto = require("crypto");
+
+const generateJWTSecret = () => {
+  return crypto.randomBytes(32).toString("hex");
+};
+
+const JWT_SECRET = generateJWTSecret();
+console.log("JWT Secret:", JWT_SECRET);
 
 const register = async (req, res) => {
   try {
@@ -27,13 +35,16 @@ const register = async (req, res) => {
       password: passwordHash,
     });
 
-    const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, {
+    await newUser.save();
+    const savedUser = await AuthSchema.findOne({ _id: newUser._id });
+
+    const token = jwt.sign({ id: newUser._id }, JWT_SECRET, {
       expiresIn: "1h",
     });
 
     res.status(200).json({
       status: "ok",
-      newUser,
+      newUser: savedUser,
       token,
     });
   } catch (err) {
@@ -54,7 +65,7 @@ const login = async (req, res) => {
       return res.status(400).json({ msg: "Incorrect password." });
     }
 
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+    const token = jwt.sign({ id: user._id }, JWT_SECRET, {
       expiresIn: "1h",
     });
 

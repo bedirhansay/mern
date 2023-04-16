@@ -6,6 +6,7 @@ const app = express();
 require("dotenv").config();
 const database = require("./config/database");
 const authRouter = require("./routes/auth.js");
+const mongoose = require("mongoose");
 const PORT = process.env.PORT || 8080;
 
 dontEnv.config();
@@ -21,7 +22,14 @@ app.use(
 
 app.use("/", authRouter);
 
-database();
+mongoose
+  .connect(process.env.MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => console.log("Database connected"))
+  .catch((err) => console.log(err));
+
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
